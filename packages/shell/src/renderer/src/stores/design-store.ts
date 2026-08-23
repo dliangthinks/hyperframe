@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import type {
+  AssetManifestEntry,
+  AssetPlan,
   DesignIndex,
   DocSections,
   FeedbackNote,
@@ -21,6 +23,8 @@ interface DesignStore {
   sections: DocSections;
   raw: Record<string, string>;
   missing: string[];
+  assets: AssetPlan | null;
+  assetManifest: AssetManifestEntry[];
   loading: boolean;
 
   /** `<kind>:<id>` — what feedback and detail views are addressed to. */
@@ -40,6 +44,8 @@ interface DesignStore {
     sections: DocSections;
     raw: Record<string, string>;
     missing: string[];
+    assets?: AssetPlan | null;
+    assetManifest?: AssetManifestEntry[];
   }) => void;
   setLoading: (loading: boolean) => void;
   addFeedback: (note: FeedbackNote) => void;
@@ -54,6 +60,8 @@ const initial = {
   sections: {} as DocSections,
   raw: {} as Record<string, string>,
   missing: [] as string[],
+  assets: null as AssetPlan | null,
+  assetManifest: [] as AssetManifestEntry[],
   loading: false,
   selected: null as string | null,
   showRaw: false,
@@ -68,8 +76,12 @@ export const useDesignStore = create<DesignStore>((set) => ({
     set({ workflow, stage: workflow.stages[1]?.id ?? workflow.stages[0]?.id ?? "" }),
   select: (selected) => set({ selected }),
   toggleRaw: () => set((s) => ({ showRaw: !s.showRaw })),
-  loadDesign: ({ index, sections, raw, missing }) =>
-    set({ index, sections, raw, missing, loading: false }),
+  loadDesign: ({ index, sections, raw, missing, assets, assetManifest }) =>
+    set({
+      index, sections, raw, missing, loading: false,
+      assets: assets ?? null,
+      assetManifest: assetManifest ?? [],
+    }),
   setLoading: (loading) => set({ loading }),
   addFeedback: (note) => set((s) => ({ feedback: [...s.feedback, note] })),
   reset: () => set(initial),
@@ -94,6 +106,9 @@ export function stageStatus(
 
   if (stage.pane === "composition") {
     return index.shots?.some((s) => s.composition) ? "review" : "pending";
+  }
+  if (stage.pane === "assets") {
+    return missing.includes("assets.json") ? "pending" : "review";
   }
   if (!stage.doc) return "pending";
   const name = stage.doc.split("/").pop() ?? stage.doc;

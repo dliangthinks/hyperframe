@@ -65,6 +65,10 @@ export interface DesignPayload {
   sections: Record<string, Record<string, string>>;
   raw: Record<string, string>;
   missing: string[];
+  /** design/assets.json — the stage-4 availability plan (need → resolution). */
+  assets: unknown | null;
+  /** design/asset-manifest.json — provenance of every vendored illustration. */
+  assetManifest: unknown[];
 }
 
 export async function readDesign(projectPath: string): Promise<DesignPayload> {
@@ -76,6 +80,20 @@ export async function readDesign(projectPath: string): Promise<DesignPayload> {
     index = JSON.parse(await readFile(join(dir, "index.json"), "utf8"));
   } catch {
     missing.push("index.json");
+  }
+
+  let assets: unknown | null = null;
+  try {
+    assets = JSON.parse(await readFile(join(dir, "assets.json"), "utf8"));
+  } catch {
+    missing.push("assets.json");
+  }
+
+  let assetManifest: unknown[] = [];
+  try {
+    assetManifest = JSON.parse(await readFile(join(dir, "asset-manifest.json"), "utf8"));
+  } catch {
+    /* absent until the first fetch — not an error and not "missing" */
   }
 
   const docs: Record<string, string> = {
@@ -101,6 +119,6 @@ export async function readDesign(projectPath: string): Promise<DesignPayload> {
     }
   }
 
-  return { index, sections, raw, missing };
+  return { index, sections, raw, missing, assets, assetManifest };
 }
 

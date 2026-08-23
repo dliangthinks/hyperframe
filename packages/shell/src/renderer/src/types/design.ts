@@ -89,6 +89,47 @@ export type PaneType =
   | "assets"
   | "narration" | "timeline" | "tokens" | "candidates" | "shotlist" | "composition" | "raw";
 
+// ── Asset plan (stage 4) ─────────────────────────────────────────────────────
+
+export type AssetResolutionKind = "svg" | "typography" | "icon" | "primitive" | "bespoke";
+
+export interface AssetResolution {
+  kind: AssetResolutionKind;
+  /** Vendored file, project-relative — svg and icon kinds. */
+  file?: string;
+  /** Source ref, e.g. "storyset:9319830" — svg kind. */
+  ref?: string;
+  /** Storyset layer ids to hide when composing. */
+  dropLayers?: string[];
+}
+
+export interface AssetNeed {
+  id: string;
+  scene: string;
+  need: string;
+  queries: string[];
+  resolution: AssetResolution;
+  why: string;
+}
+
+export interface AssetPlan {
+  version: number;
+  needs: AssetNeed[];
+}
+
+export interface AssetManifestEntry {
+  ref: string;
+  source: string;
+  sourceId: string;
+  title: string;
+  author?: string;
+  query: string;
+  file: string;
+  pageUrl: string;
+  downloadedAt: string;
+  recolored: boolean;
+}
+
 /** A workflow stage, loaded from the pipeline. The rail is built from these. */
 export interface StageDef {
   id: string;

@@ -10,6 +10,7 @@ import { NarrationPane } from "./stages/NarrationPane";
 import { BreakdownPane } from "./stages/BreakdownPane";
 import { ArtDirectionPane } from "./stages/ArtDirectionPane";
 import { MetaphorPane } from "./stages/MetaphorPane";
+import { AssetsPane } from "./stages/AssetsPane";
 import { ShootingScriptPane } from "./stages/ShootingScriptPane";
 import { CompositionPane } from "./stages/CompositionPane";
 
@@ -107,6 +108,7 @@ function Pane({ pane }: { pane: PaneType }) {
     case "timeline": return <BreakdownPane />;
     case "tokens": return <ArtDirectionPane />;
     case "candidates": return <MetaphorPane />;
+    case "assets": return <AssetsPane />;
     case "shotlist": return <ShootingScriptPane />;
     case "composition": return <CompositionPane />;
     default: return <Prose src="" />;
