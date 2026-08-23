@@ -145,7 +145,7 @@ Everything above is the machinery. What follows is the first workflow built on i
 
 The failure mode is **banality** — the first metaphor is the culturally exhausted one. Four mandatory countermeasures: constrain the source domain (cartographic, mechanical, architectural, typographic, biological, textile — rotated across the piece); require the metaphor to be load-bearing (can it carry the next three sentences and survive the turn in the argument?); name the obvious option and reject it on the record; judge against the argument, not the aesthetics.
 
-**4 · Shooting script — now, and only now, break scenes into shots.** Per shot: its purpose, its manifest duration, what it inherits from the scene's metaphor, what it contributes, and two independent resolutions — a **motion device** from the upstream catalog, and a **visual asset** from project assets or authored (the catalog has almost no representational imagery, so authoring is in scope by default). A technical stage: the creative decisions are made; this distributes them across the timeline.
+**4 · Shooting script — now, and only now, break scenes into shots.** Per shot: its purpose, its manifest duration, what it inherits from the scene's metaphor, what it contributes, and two independent resolutions — a **motion device** from the upstream catalog, and a **visual asset**: already-vendored project assets first, then the asset sources (§8f), and bespoke authoring only as an explicit escalation when every source fails (the upstream catalog has almost no representational imagery, so illustrations come from the sources, not from it). A technical stage: the creative decisions are made; this distributes them across the timeline.
 
 **5 · Composition — transcription.** One HTML file per scene, mounted as sub-compositions from the root — per-scene surgical editing without leaving the HTML + GSAP model. By this stage generation is transcription: metaphor, look, assets, and timing are all locked.
 
@@ -168,7 +168,7 @@ Learned by building one scene badly three times; enforced by the skills, machine
 - **Text must be readable in its screen time.** Two to three words per second of shot duration, counted — a 5s shot carries about a dozen words including any caption. `textObjects` and `words` are declared fields, so both limits are machine-checkable before anything renders.
 - **An icon beside a label is not a visual.** Decorated text is text. Icons earn their place when they *are* the object being manipulated.
 - **Real vocabulary as content inside a demonstration, not as an annotation layer.** Show `git status` output, not the word `GIT`. Labels drawn from the subject's real vocabulary remain the cheapest density available — no drawing, no motion authoring, no catalog dependency — and a research pass for real terms is the difference between authored and templated.
-- **Source graphics; never generate SVG on the spot.** Visuals beyond typography come from existing high-quality libraries — Lucide, Tabler, Phosphor, Iconoir, Simple Icons — downloaded into `assets/` and inlined per instance (an SVG `<use>` sprite fails: the runtime captures only the composition root). An agent drawing its own SVG is the quality floor this rule exists to prevent.
+- **Source graphics; never generate SVG on the spot.** Icons come from existing high-quality libraries — Lucide, Tabler, Phosphor, Iconoir, Simple Icons — and illustrations through the asset-source adapters (§8f); everything is downloaded into `assets/` and inlined per instance (an SVG `<use>` sprite fails: the runtime captures only the composition root). An agent drawing its own SVG is the quality floor this rule exists to prevent.
 
 ### 8e. Surgical control
 
@@ -188,6 +188,22 @@ Not a separate feature — the artifact chain *is* the mechanism: a change re-ru
 
 Metaphor and timing are separate artifacts precisely so the last three rows stay cheap.
 
+### 8f. Asset sources
+
+The §8d rule — never generate SVG on the spot — is implemented as **asset-source adapters**: small clients ([assets/](packages/pipeline/src/design/assets/)) that search an external library per visualization need and vendor the chosen SVG into the project.
+
+**The chain is Storyset → Freepik → unDraw**, quality-ordered; a source that errors or returns nothing falls through to the next, and art direction can reorder it. One Freepik API key (in `.env` as `FREEPIK_API_KEY`) covers both Storyset — which has no API of its own but lives in the Freepik catalog under author `storyset` — and the stock vector catalog, with direct SVG downloads; assets without an SVG format are dropped, never converted. unDraw's public API is the keyless fallback. Storyset earns first place twice over: the most detailed illustrations, and SVGs that arrive **layered with named groups** (`Character_1`, `Background_Complete`, `Floor`, …) so individual objects can be animated separately and backgrounds dropped.
+
+**Selection stays human.** `hyperframes-assets search` returns candidates for review; `fetch` vendors the one the reviewer (or the skill, within declared constraints) picked, and records provenance — source, id, author, query, license page, date — in `design/asset-manifest.json`. No bulk vendoring, no scraping.
+
+**Consistency is enforced by declaration plus mechanics**, in descending order of leverage:
+
+1. **Recolor at ingest.** Art direction may declare a hex→hex map; every fetched SVG is remapped onto the project tokens before it touches disk. Flat illustration styles encode color as literal hex fills, so this is a string remap — shared ink is what makes assets from different sources read as one system.
+2. **One style family.** Storyset's five styles (Rafiki, Bro, Amico, Pana, Cuate) are internally consistent; art direction declares one per project. The Freepik API does not index style, so this is a declared intent checked against thumbnails at the review gate, not a machine filter.
+3. **Author lock.** On the Freepik marketplace, consistency is an author property. Authors already in the manifest (plus any declared `authorLock`) rank first in every subsequent search, so a video that starts with one artist stays with them.
+4. **One asset language.** Filled-flat and outline-stroke never mix in one video; declared in art direction, enforced at the gate.
+5. **Uniform treatment.** The composition skill applies the same scale, background handling, and entrance devices to every asset.
+
 ## 9. Roadmap
 
 Ordered by priority, not by date. One thing is urgent; everything else is a future version.
@@ -196,7 +212,7 @@ Ordered by priority, not by date. One thing is urgent; everything else is a futu
 
 The single current priority is output quality: run the built-in workflow (§8) end to end, repeatedly, until it reliably produces satisfying video. Every mechanism in this document exists to serve that, and nothing further down this list matters until it holds.
 
-Part of this priority is **visuals beyond typography**. The workflow is only starting to place graphics that are not type — icons first — and the mechanism is deliberate: **never generate SVG on the spot.** Generated-on-demand graphics are inconsistent and low-quality; instead, visuals are sourced from existing high-quality libraries that other repos maintain (Lucide, Tabler, Phosphor, Iconoir, Simple Icons — §8d), downloaded into the project and inlined. The current sources cover icons well and little else; broadening to more kinds of imagery, from equally curated sources, is the near-term work.
+Part of this priority is **visuals beyond typography**, and its mechanism is deliberate: **never generate SVG on the spot** — generated-on-demand graphics are inconsistent and low-quality. Icons come from the vendored open sets (Lucide, Tabler, Phosphor, Iconoir, Simple Icons — §8d); illustrations now come through the asset-source adapters (§8f), tested against the reference project's real needs: Storyset matched 13 of 14, Freepik 14 of 14, unDraw 12 of 14. What remains here is exercising the adapters inside a full workflow run and tuning the consistency levers against real output.
 
 ### Future versions, roughly in priority order
 

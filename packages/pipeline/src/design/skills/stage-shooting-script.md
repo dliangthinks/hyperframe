@@ -27,7 +27,14 @@ The declared fields are read by the app and enforce the README §8d limits; get 
 
 1. **Layout at the hero frame** — where every element sits, in the frame, using art-direction tokens for fill and stroke. Exact enough to place without guessing.
 2. **What animates and how** — each element's entrance or transform, which catalog device drives it, the beat timing that fills the duration (e.g. "0–3s: … · 3–8s: …"). Account for the entire runtime; a shot that acts once and holds is a failure.
-3. **Every asset named** — the exact icon/file path for each glyph, from the vendored sets. If the scene needs an asset that isn't vendored, say so explicitly.
+3. **Every asset named** — the exact icon/file path for each glyph, from the vendored sets. If the scene needs an illustration that isn't vendored yet, resolve it through the asset sources — never draw it yourself (README §8d):
+
+   ```
+   npx hyperframes-assets search "<need, plain English>" --project <project>
+   npx hyperframes-assets fetch <ref> --query "<need>" --project <project> [--name <base>]
+   ```
+
+   `search` walks the priority chain (Storyset → Freepik → unDraw, or the order art direction declares) and returns candidates as JSON. Pick the candidate that matches art direction's declared `illustration` constraints — the style family, the asset language (`filled` vs `outline` — never mix them in one video), and an author already in `design/asset-manifest.json` when one exists (same author = same style; results are pre-ranked this way). `fetch` vendors the SVG into `assets/illustrations/`, applies the declared recolor map so its palette matches the project tokens, and records provenance in the manifest. Reference the vendored path in `assets:`. If every source comes up empty, say so explicitly — bespoke authoring is a deliberate escalation, not a silent default.
 4. **The mechanism, performed, never labelled** — if the narration says "syntax highlighting", instruct "grey code recolours token by token", not "show the label SYNTAX HIGHLIGHTING". A shot whose content is a list of terms violates the README §8d rules; rewrite it as something happening.
 
 ## Hard limits (the app rejects violations)

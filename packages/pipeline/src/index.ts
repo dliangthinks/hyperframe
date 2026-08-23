@@ -76,3 +76,8 @@ export type {
   BreakdownDoc, ArtDirectionDoc, ShootingScriptDoc, ShotDirective, BreakdownScene,
 } from "./design/artifacts.js";
 export { migrateAll } from "./design/migrate-all.js";
+export { resolveNeed, fetchAsset, readManifest, readConstraints } from "./design/assets/resolve.js";
+export { extractPalette, recolorSvg } from "./design/assets/recolor.js";
+export type {
+  AssetCandidate, AssetManifestEntry, AssetSource, AssetSourceId, IllustrationConstraints,
+} from "./design/assets/types.js";

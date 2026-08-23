@@ -5,6 +5,9 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "hyperframes-assets": "dist/design/assets/cli.js"
+  },
   "scripts": {
     "build": "tsc && mkdir -p dist/design/workflows dist/design/skills && cp src/design/workflows/*.json dist/design/workflows/ && cp src/design/skills/*.md dist/design/skills/",
     "dev": "tsc --watch",
