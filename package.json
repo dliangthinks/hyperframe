@@ -7,7 +7,8 @@
   ],
   "scripts": {
     "dev": "npm run build --workspace=packages/pipeline && concurrently -n pipeline,shell -c blue,green \"npm run dev --workspace=packages/pipeline\" \"npm run dev --workspace=packages/shell\"",
-    "build": "npm run build --workspace=packages/pipeline && npm run build --workspace=packages/shell"
+    "build": "npm run build --workspace=packages/pipeline && npm run build --workspace=packages/shell",
+    "start": "npm run build && electron packages/shell"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

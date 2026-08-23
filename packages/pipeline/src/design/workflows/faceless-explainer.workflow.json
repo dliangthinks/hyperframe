@@ -1,0 +1,23 @@
+{
+  "id": "faceless-explainer",
+  "label": "Faceless explainer",
+  "description": "Narration-first explainer. Script in, per-scene compositions out, designed top-down: budget, look, metaphor, shooting script, code.",
+  "stages": [
+    { "id": "narration", "label": "Narration", "skill": "narration-lock", "pane": "narration", "dependsOn": [], "input": true },
+    { "id": "breakdown", "label": "Breakdown", "skill": "stage-breakdown", "doc": "01-breakdown.md", "pane": "timeline", "dependsOn": ["narration"] },
+    { "id": "artDirection", "label": "Art direction", "skill": "stage-art-direction", "doc": "02-art-direction.md", "pane": "tokens", "dependsOn": ["narration", "breakdown"] },
+    { "id": "metaphor", "label": "Metaphor", "skill": "stage-metaphor", "doc": "03-metaphors.md", "pane": "candidates", "dependsOn": ["breakdown", "artDirection"],
+      "fields": [
+        { "key": "status", "scope": "candidate", "kind": "enum", "values": ["selected", "rejected", "proposed"] },
+        { "key": "cost", "scope": "candidate", "kind": "enum", "values": ["low", "medium", "high"] }
+      ] },
+    { "id": "shootingScript", "label": "Shooting script", "skill": "stage-shooting-script", "doc": "04-shooting-script.md", "pane": "shotlist", "dependsOn": ["metaphor", "artDirection"],
+      "fields": [
+        { "key": "text objects", "scope": "shot", "kind": "int" },
+        { "key": "on-screen words", "scope": "shot", "kind": "int" },
+        { "key": "devices", "scope": "shot", "kind": "list" },
+        { "key": "assets", "scope": "shot", "kind": "list" }
+      ] },
+    { "id": "composition", "label": "Composition", "skill": "stage-composition", "pane": "composition", "dependsOn": ["shootingScript", "artDirection"] }
+  ]
+}

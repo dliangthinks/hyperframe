@@ -13,6 +13,32 @@ const api = {
   listProjects: () => ipcRenderer.invoke("project:list"),
   selectDirectory: () => ipcRenderer.invoke("project:select-directory"),
 
+  // ── Design artifacts ────────────────────────────────────────────────────
+  readDesign: (projectPath: string) =>
+    ipcRenderer.invoke("design:read", projectPath),
+  approveCandidate: (projectPath: string, sceneId: string, candidateId: string) =>
+    ipcRenderer.invoke("design:approve-candidate", projectPath, sceneId, candidateId),
+  readMetaphors: (projectPath: string) =>
+    ipcRenderer.invoke("design:metaphors", projectPath),
+  listRenders: (projectPath: string) =>
+    ipcRenderer.invoke("design:list-renders", projectPath),
+  compose: (projectPath: string, sceneId: string) =>
+    ipcRenderer.invoke("design:compose", projectPath, sceneId),
+  loadWorkflow: (projectPath: string, id?: string) =>
+    ipcRenderer.invoke("design:workflow", projectPath, id),
+  listWorkflows: (projectPath: string) =>
+    ipcRenderer.invoke("design:workflows", projectPath),
+  saveWorkflow: (projectPath: string, wf: unknown) =>
+    ipcRenderer.invoke("design:save-workflow", projectPath, wf),
+  validateWorkflow: (wf: unknown) =>
+    ipcRenderer.invoke("design:validate-workflow", wf),
+  sendFeedback: (projectPath: string, target: string, body: string) =>
+    ipcRenderer.invoke("design:feedback", projectPath, target, body),
+  planBatch: (projectPath: string) =>
+    ipcRenderer.invoke("design:plan-batch", projectPath),
+  applyBatch: (projectPath: string) =>
+    ipcRenderer.invoke("design:apply-batch", projectPath),
+
   // ── Script ──────────────────────────────────────────────────────────────
   analyzeScript: (script: string) => ipcRenderer.invoke("script:analyze", script),
 

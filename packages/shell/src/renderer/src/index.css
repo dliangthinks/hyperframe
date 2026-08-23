@@ -4,7 +4,12 @@
   -webkit-app-region: drag;
 }
 
-.app-drag-region * {
+/* Only interactive controls opt out of dragging — the bar and its text stay
+   draggable, so the window moves when grabbed anywhere but a button. */
+.app-drag-region button,
+.app-drag-region select,
+.app-drag-region input,
+.app-drag-region a {
   -webkit-app-region: no-drag;
 }
 
@@ -23,4 +28,49 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(82 82 91);
+}
+
+/* Artifact prose — rendered inside the app's own chrome, never as a document. */
+.prose-artifact .md-p { margin: 0 0 0.55rem; }
+.prose-artifact .md-p:last-child { margin-bottom: 0; }
+.prose-artifact .md-h {
+  margin: 0.9rem 0 0.4rem;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(113 113 122);
+}
+.prose-artifact .md-h:first-child { margin-top: 0; }
+.prose-artifact .md-ul { margin: 0 0 0.55rem; padding-left: 1.1rem; list-style: disc; }
+.prose-artifact .md-ul li { margin-bottom: 0.2rem; }
+.prose-artifact .md-quote {
+  margin: 0 0 0.6rem;
+  padding-left: 0.7rem;
+  border-left: 2px solid rgb(63 63 70);
+  color: rgb(161 161 170);
+  font-family: "Iowan Old Style", Palatino, Georgia, serif;
+}
+.prose-artifact .md-code {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 11.5px;
+  background: rgb(39 39 42);
+  border-radius: 3px;
+  padding: 0.5px 4px;
+}
+.prose-artifact strong { color: rgb(228 228 231); font-weight: 500; }
+.prose-artifact .md-table { width: 100%; border-collapse: collapse; margin: 0 0 0.6rem; }
+.prose-artifact .md-table th,
+.prose-artifact .md-table td {
+  border-bottom: 1px solid rgb(39 39 42);
+  padding: 3px 6px 3px 0;
+  text-align: left;
+  vertical-align: top;
+}
+.prose-artifact .md-table th {
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgb(113 113 122);
 }

@@ -3,6 +3,8 @@ import { useProjectStore } from "./stores/project-store";
 import { TopBar } from "./components/TopBar";
 import { SceneSidebar } from "./components/SceneSidebar";
 import { SceneDetail } from "./components/SceneDetail";
+import { DesignView } from "./components/DesignView";
+import { useDesignStore } from "./stores/design-store";
 import React from "react";
 
 class ErrorBoundary extends React.Component<
@@ -45,12 +47,35 @@ function AppContent() {
   const setLastRenderPath = useProjectStore((s) => s.setLastRenderPath);
   const setLastGenerated = useProjectStore((s) => s.setLastGenerated);
   const [apiReady, setApiReady] = useState(false);
+  const mode = useDesignStore((s) => s.mode);
+  const loadDesign = useDesignStore((s) => s.loadDesign);
+  const setWorkflow = useDesignStore((s) => s.setWorkflow);
+  const setDesignLoading = useDesignStore((s) => s.setLoading);
+  const resetDesign = useDesignStore((s) => s.reset);
 
   const loadProject = useCallback(async (path: string) => {
     if (!window.api) return;
     try {
       const state = await window.api.openProject(path);
       setProject(state.name, path);
+
+      // Design artifacts are read straight from disk — the skill writes them,
+      // the app only reviews them (README.md §7).
+      resetDesign();
+      setDesignLoading(true);
+      try {
+        const workflow = await window.api.loadWorkflow(path);
+        setWorkflow(workflow as never);
+      } catch {
+        // no workflow found — the rail will show "No workflow loaded"
+      }
+      try {
+        const design = await window.api.readDesign(path);
+        loadDesign(design as never);
+      } catch {
+        setDesignLoading(false);
+      }
+
       setScript(state.script);
       setScenes(state.scenes ?? []);
       setSelectedSceneIndex(0);
@@ -153,15 +178,19 @@ function AppContent() {
     <div className="h-screen flex flex-col bg-zinc-950 text-zinc-100">
       <TopBar onOpenProject={loadProject} />
 
-      <div className="flex-1 flex min-h-0">
-        <aside className="w-[140px] shrink-0 border-r border-zinc-800 overflow-y-auto bg-zinc-950">
-          <SceneSidebar />
-        </aside>
+      {mode === "design" ? (
+        <DesignView />
+      ) : (
+        <div className="flex-1 flex min-h-0">
+          <aside className="w-[140px] shrink-0 border-r border-zinc-800 overflow-y-auto bg-zinc-950">
+            <SceneSidebar />
+          </aside>
 
-        <main className="flex-1 min-w-0">
-          <SceneDetail />
-        </main>
-      </div>
+          <main className="flex-1 min-w-0">
+            <SceneDetail />
+          </main>
+        </div>
+      )}
     </div>
   );
 }

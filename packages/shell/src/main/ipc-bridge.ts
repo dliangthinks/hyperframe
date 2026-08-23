@@ -14,6 +14,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import type { Pipeline, PipelineEvents } from "@hyperframes-app/pipeline";
+import { readDesign } from "./design-reader";
 
 function getSettingsPath(): string {
   const dir = app.getPath("userData");
@@ -91,6 +92,148 @@ export function registerIpcHandlers(
 
   ipcMain.handle("project:create", async (_event, name: string) => {
     return pipeline.createProject(name);
+  });
+
+  // ── Design artifacts ────────────────────────────────────────────────────
+  // Reads design/index.json plus the four markdown docs, split into sections
+  // by heading slug. The renderer addresses sections; it never parses prose.
+  ipcMain.handle("design:workflow", async (_event, projectPath: string, id?: string) => {
+    const { loadWorkflow } = await import("@hyperframes-app/pipeline");
+    return loadWorkflow(projectPath, id);
+  });
+
+  ipcMain.handle("design:workflows", async (_event, projectPath: string) => {
+    const { listAllWorkflows } = await import("@hyperframes-app/pipeline");
+    return listAllWorkflows(projectPath);
+  });
+
+  // Saving a workflow writes a project-local copy — built-ins stay pristine, and
+  // this doubles as "fork a built-in to customize it". Invalid graphs are refused.
+  ipcMain.handle("design:save-workflow", async (_event, projectPath: string, wf: unknown) => {
+    const { saveWorkflow } = await import("@hyperframes-app/pipeline");
+    return saveWorkflow(projectPath, wf as never);
+  });
+
+  ipcMain.handle("design:validate-workflow", async (_event, wf: unknown) => {
+    const { validateWorkflow } = await import("@hyperframes-app/pipeline");
+    return validateWorkflow(wf as never);
+  });
+
+  // Renders on disk, newest first. The preview plays the most recent MP4 rather
+  // than requiring a live preview server for finished work.
+  // Compose one scene's HTML from the approved artifacts. Dispatches Claude Code
+  // (the app authors nothing), streams progress, then re-derives the index so the
+  // new composition file is picked up.
+  ipcMain.handle("design:compose", async (event, projectPath: string, sceneId: string) => {
+    const { Composer, writeIndex } = await import("@hyperframes-app/pipeline");
+    const ai = pipeline.getAIProvider();
+    if (!ai) throw new Error("No AI provider configured.");
+    const composer = new Composer(ai);
+    for (const ch of ["start", "progress", "done", "error"] as const) {
+      composer.on(ch, (data: unknown) => event.sender.send(`pipeline:design:compose:${ch}`, data));
+    }
+    try {
+      const res = await composer.compose(projectPath, sceneId);
+      const rebuilt = await writeIndex(projectPath);
+      return { ...res, issues: rebuilt.issues };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  ipcMain.handle("design:list-renders", async (_event, projectPath: string) => {
+    const { readdir, stat } = await import("node:fs/promises");
+    const { join } = await import("node:path");
+    const dir = join(projectPath, "renders");
+    try {
+      const files = (await readdir(dir)).filter((f) => f.endsWith(".mp4"));
+      const withTime = await Promise.all(
+        files.map(async (f) => {
+          const st = await stat(join(dir, f));
+          return { name: f, path: join(dir, f), mtime: st.mtimeMs };
+        }),
+      );
+      return withTime.sort((a, b) => b.mtime - a.mtime);
+    } catch {
+      return [];
+    }
+  });
+
+  // Approve a metaphor candidate — an explicit user action, not a model edit.
+  // If the choice changed, the scene's shooting script is now stale and must be
+  // re-run before compose; the app reminds the user.
+  ipcMain.handle(
+    "design:approve-candidate",
+    async (_event, projectPath: string, sceneId: string, candidateId: string) => {
+      const { selectCandidate, writeIndex } = await import("@hyperframes-app/pipeline");
+      const { changed } = await selectCandidate(projectPath, sceneId, candidateId, Date.now());
+      if (changed) {
+        // Mark the shooting script (and composition) stale for this change.
+        const { readFile, writeFile } = await import("node:fs/promises");
+        const { join } = await import("node:path");
+        const file = join(projectPath, "design", "index.json");
+        try {
+          const idx = JSON.parse(await readFile(file, "utf8"));
+          idx.stages = { ...(idx.stages ?? {}), shootingScript: "stale", composition: "stale" };
+          await writeFile(file, JSON.stringify(idx, null, 2), "utf8");
+        } catch {
+          /* index not built */
+        }
+      }
+      await writeIndex(projectPath);
+      return { changed };
+    },
+  );
+
+  ipcMain.handle("design:metaphors", async (_event, projectPath: string) => {
+    const { readMetaphors } = await import("@hyperframes-app/pipeline");
+    return readMetaphors(projectPath);
+  });
+
+  ipcMain.handle("design:read", async (_event, projectPath: string) =>
+    readDesign(projectPath),
+  );
+
+  // A note records the hash of what it was written against, so a note about an
+  // older version is flagged rather than applied blind (README.md §6).
+  ipcMain.handle(
+    "design:feedback",
+    async (_event, projectPath: string, target: string, body: string) => {
+      const { addNote, contextFor } = await import("@hyperframes-app/pipeline");
+      const envelope = await contextFor(projectPath, target);
+      return addNote(projectPath, target, body, envelope?.current.hash ?? "", Date.now());
+    },
+  );
+
+  ipcMain.handle("design:plan-batch", async (_event, projectPath: string) => {
+    const { FeedbackRunner } = await import("@hyperframes-app/pipeline");
+    return new FeedbackRunner(pipeline.getAIProvider()!).plan(projectPath);
+  });
+
+  // The app dispatches re-runs and streams progress; it authors nothing.
+  ipcMain.handle("design:apply-batch", async (event, projectPath: string) => {
+    const { FeedbackRunner, writeIndex } = await import("@hyperframes-app/pipeline");
+    const ai = pipeline.getAIProvider();
+    if (!ai) throw new Error("No AI provider configured.");
+
+    const runner = new FeedbackRunner(ai);
+    for (const ch of [
+      "batch:start",
+      "item:start",
+      "item:progress",
+      "item:done",
+      "item:error",
+      "batch:done",
+    ] as const) {
+      runner.on(ch, (data: unknown) =>
+        event.sender.send(`pipeline:design:${ch}`, data),
+      );
+    }
+
+    const applied = await runner.apply(projectPath);
+    // Documents changed, so the index is re-derived — never hand-edited.
+    const rebuilt = await writeIndex(projectPath);
+    return { applied, issues: rebuilt.issues };
   });
 
   ipcMain.handle("project:open", async (_event, projectPath: string) => {

@@ -8,6 +8,12 @@ interface ClaudeCodeConfig {
 /**
  * AI provider that spawns the Claude Code CLI.
  *
+ * The app dispatches re-runs through this; it never authors content. Its former
+ * job — generating a whole composition in one shot — is gone, because that
+ * duplicated the upstream CLI. What remains is dispatch: hand an assembled
+ * context envelope to Claude Code and stream the result back so a re-run is
+ * visible progress rather than a silent file change. See README.md §7.
+ *
  *   claude --print --output-format stream-json --verbose \
  *     --system-prompt <prompt> [--model <model>] [--resume <sessionId>] \
  *     <userMessage>
