@@ -97,6 +97,8 @@ export interface AssetResolution {
   kind: AssetResolutionKind;
   /** Vendored file, project-relative — svg and icon kinds. */
   file?: string;
+  /** Multiple vendored files — icon needs that name several glyphs. */
+  files?: string[];
   /** Source ref, e.g. "storyset:9319830" — svg kind. */
   ref?: string;
   /** Storyset layer ids to hide when composing. */

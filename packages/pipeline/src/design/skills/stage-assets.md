@@ -66,7 +66,7 @@ This vendors the SVG into `assets/illustrations/`, applies the recolor map, and 
 }
 ```
 
-`resolution.kind` is `svg` | `typography` | `icon` | `primitive` | `bespoke`. Every need gets a `why` — one line, judged not asserted.
+`resolution.kind` is `svg` | `typography` | `icon` | `primitive` | `bespoke`. An `icon` resolution names its glyph in `file`, or several in `files`. Every need gets a `why` — one line, judged not asserted.
 
 ## Discipline
 

@@ -19,7 +19,7 @@ const KIND_STYLE: Record<AssetResolutionKind, { label: string; cls: string }> = 
 };
 
 /** Vendored SVG thumbnail, resolved through the local-file protocol. */
-function AssetThumb({ file }: { file: string }) {
+function AssetThumb({ file, small }: { file: string; small?: boolean }) {
   const projectPath = useProjectStore((s) => s.projectPath);
   const [url, setUrl] = useState<string | null>(null);
 
@@ -32,10 +32,11 @@ function AssetThumb({ file }: { file: string }) {
     return () => { live = false; };
   }, [projectPath, file]);
 
+  const box = small ? "h-10 w-10" : "h-24 w-32";
   if (!url) {
     return (
-      <div className="flex h-24 w-32 shrink-0 items-center justify-center rounded border border-dashed border-zinc-700 text-[10px] text-zinc-600">
-        file missing
+      <div className={`flex ${box} shrink-0 items-center justify-center rounded border border-dashed border-zinc-700 text-[10px] text-zinc-600`}>
+        {small ? "?" : "file missing"}
       </div>
     );
   }
@@ -43,7 +44,8 @@ function AssetThumb({ file }: { file: string }) {
     <img
       src={url}
       alt={file}
-      className="h-24 w-32 shrink-0 rounded border border-zinc-800 bg-white object-contain"
+      title={file}
+      className={`${box} shrink-0 rounded border border-zinc-800 bg-white object-contain ${small ? "p-1" : ""}`}
     />
   );
 }
@@ -54,6 +56,13 @@ function NeedCard({ need }: { need: AssetNeed }) {
     <div className="flex gap-3 rounded border border-zinc-800 p-3">
       {need.resolution.kind === "svg" && need.resolution.file ? (
         <AssetThumb file={need.resolution.file} />
+      ) : null}
+      {need.resolution.kind === "icon" && need.resolution.files?.length ? (
+        <div className="flex shrink-0 flex-wrap content-start gap-1" style={{ maxWidth: 96 }}>
+          {need.resolution.files.map((f) => (
+            <AssetThumb key={f} file={f} small />
+          ))}
+        </div>
       ) : null}
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
@@ -73,9 +82,11 @@ function NeedCard({ need }: { need: AssetNeed }) {
           </div>
         ) : null}
         <div className="mt-1 text-[11px] text-zinc-500">{need.why}</div>
-        <div className="mt-1 truncate text-[10px] text-zinc-700">
-          tried: {need.queries.join(" · ")}
-        </div>
+        {need.queries.length > 0 && (
+          <div className="mt-1 truncate text-[10px] text-zinc-700">
+            tried: {need.queries.join(" · ")}
+          </div>
+        )}
       </div>
     </div>
   );
