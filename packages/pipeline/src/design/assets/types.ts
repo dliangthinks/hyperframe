@@ -41,13 +41,10 @@ export interface AssetSource {
 export interface IllustrationConstraints {
   /** Source priority chain. Default: storyset, freepik, undraw. */
   sources?: AssetSourceId[];
-  /** Storyset style family (rafiki|bro|amico|pana|cuate). Enforced at review —
-   * the Freepik API does not index style, so this is a declared intent the
-   * human checks against thumbnails, not a machine filter. */
+  /** Storyset style-family preference (rafiki|bro|amico|pana|cuate). Ranks
+   * candidates; never rejects the only available match — availability
+   * outranks style, and recolor/layer-dropping make found assets fit. */
   style?: string;
-  /** Asset language — mixing filled and outline styles is what reads as
-   * incoherent. Declared here; enforced at the review gate. */
-  language?: "filled" | "outline";
   /** Freepik author lock — once a video commits to authors, stay with them. */
   authorLock?: string[];
   /** Hex→hex remap applied at ingest, source colors to project tokens. */

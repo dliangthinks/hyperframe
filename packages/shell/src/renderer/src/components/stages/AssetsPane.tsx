@@ -129,6 +129,24 @@ export function AssetsPane() {
         </div>
       )}
 
+      {(() => {
+        // A scene driven by fewer than two illustrations is thin — icons and
+        // fallbacks don't count toward visual coverage.
+        const svgCount = new Map<string, number>();
+        for (const n of needs)
+          if (n.resolution.kind === "svg")
+            svgCount.set(n.scene, (svgCount.get(n.scene) ?? 0) + 1);
+        const thin = [...new Set(needs.map((n) => n.scene))].filter(
+          (s) => (svgCount.get(s) ?? 0) < 2,
+        );
+        return thin.length > 0 ? (
+          <div className="mt-2 rounded border border-rose-900 bg-rose-950/40 p-2 text-[11px] text-rose-300">
+            Thin coverage: {thin.map(sceneTitle).join(", ")} — fewer than 2 secured
+            illustrations. Icons and fallbacks don't drive a scene.
+          </div>
+        ) : null;
+      })()}
+
       {sceneOrder.map((sceneId) => (
         <div key={sceneId} className="mt-4">
           <div className="mb-1.5 text-[11px] uppercase tracking-wide text-zinc-500">
