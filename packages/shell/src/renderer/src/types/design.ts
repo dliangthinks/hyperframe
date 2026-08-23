@@ -86,6 +86,7 @@ export interface FeedbackNote {
 }
 
 export type PaneType =
+  | "assets"
   | "narration" | "timeline" | "tokens" | "candidates" | "shotlist" | "composition" | "raw";
 
 /** A workflow stage, loaded from the pipeline. The rail is built from these. */

@@ -14,6 +14,7 @@ export type PaneType =
   | "timeline"     // proportional duration bar (breakdown)
   | "tokens"       // painted palette swatches + type specimens
   | "candidates"   // metaphor candidate cards under pinned narration
+  | "assets"       // per-need resolution: vendored SVG thumbnails or fallback verdicts
   | "shotlist"     // shots grouped by scene, with the §5c gate
   | "composition"  // generated files + the door into Edit
   | "raw";         // markdown fallback
@@ -69,7 +70,7 @@ export function upstreamOf(wf: Workflow, stageId: string): StageDef[] {
 // ── Validation & persistence contract ───────────────────────────────────────
 
 export const PANE_TYPES: PaneType[] = [
-  "narration", "timeline", "tokens", "candidates", "shotlist", "composition", "raw",
+  "narration", "timeline", "tokens", "candidates", "assets", "shotlist", "composition", "raw",
 ];
 
 export interface WorkflowIssue {
