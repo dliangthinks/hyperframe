@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { storysetSource, freepikSource } from "./freepik.js";
 import { undrawSource } from "./undraw.js";
+import { deposit, libraryEntry, readLibrarySvg, searchLibrary } from "./library.js";
 import { recolorSvg } from "./recolor.js";
 import type {
   AssetCandidate,
@@ -19,7 +20,7 @@ import type {
  * fetch vendors the one the reviewer picked.
  */
 
-const SOURCES: Record<AssetSourceId, AssetSource> = {
+const SOURCES: Partial<Record<AssetSourceId, AssetSource>> = {
   storyset: storysetSource,
   freepik: freepikSource,
   undraw: undrawSource,
@@ -72,9 +73,25 @@ export async function resolveNeed(
   const chain = opts?.source ? [opts.source] : constraints.sources ?? DEFAULT_CHAIN;
 
   const fellThrough: ResolveResult["fellThrough"] = [];
+
+  // The local library is always consulted first (unless a specific network
+  // source is forced) — a hit costs no credits and no round-trip.
+  if (!opts?.source || opts.source === "library") {
+    const cached = await searchLibrary(query);
+    if (cached.length) {
+      return { source: "library", candidates: cached.slice(0, opts?.limit ?? 6), fellThrough };
+    }
+    if (opts?.source === "library") {
+      return { source: "library", candidates: [], fellThrough: [{ source: "library", reason: "no cached match" }] };
+    }
+    fellThrough.push({ source: "library", reason: "no cached match" });
+  }
+
   for (const id of chain) {
+    const src = SOURCES[id];
+    if (!src) continue;
     try {
-      const candidates = await SOURCES[id].search(query, {
+      const candidates = await src.search(query, {
         limit: opts?.limit ?? 6,
         preferAuthors: prefer,
       });
@@ -95,7 +112,30 @@ export async function fetchAsset(
   name?: string,
 ): Promise<AssetManifestEntry> {
   const constraints = await readConstraints(projectPath);
-  let svg = await SOURCES[candidate.source].download(candidate);
+
+  let svg: string;
+  let provenance = { source: candidate.source as string, pageUrl: candidate.pageUrl, author: candidate.author };
+  if (candidate.source === "library") {
+    svg = await readLibrarySvg(candidate.sourceId);
+    const entry = await libraryEntry(candidate.sourceId);
+    if (entry) {
+      provenance = { source: entry.source, pageUrl: entry.pageUrl, author: entry.author };
+      await deposit(svg, { ...entry, query }); // merge this query into its search surface
+    }
+  } else {
+    const src = SOURCES[candidate.source];
+    if (!src) throw new Error(`Unknown source ${candidate.source}.`);
+    svg = await src.download(candidate);
+    // Every network fetch lands in the cross-project library, pre-recolor.
+    await deposit(svg, {
+      source: candidate.source,
+      sourceId: candidate.sourceId,
+      title: candidate.title,
+      author: candidate.author,
+      pageUrl: candidate.pageUrl,
+      query,
+    });
+  }
 
   const recolored = Boolean(constraints.recolor && Object.keys(constraints.recolor).length);
   if (recolored) svg = recolorSvg(svg, constraints.recolor!);
@@ -107,13 +147,13 @@ export async function fetchAsset(
 
   const entry: AssetManifestEntry = {
     ref: candidate.ref,
-    source: candidate.source,
+    source: provenance.source as AssetManifestEntry["source"],
     sourceId: candidate.sourceId,
     title: candidate.title,
-    author: candidate.author,
+    author: provenance.author,
     query,
     file,
-    pageUrl: candidate.pageUrl,
+    pageUrl: provenance.pageUrl,
     downloadedAt: new Date().toISOString(),
     recolored,
   };

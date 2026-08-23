@@ -7,7 +7,7 @@
  * chain and the consistency constraints live in art direction, not here.
  */
 
-export type AssetSourceId = "storyset" | "freepik" | "undraw";
+export type AssetSourceId = "library" | "storyset" | "freepik" | "undraw";
 
 export interface AssetCandidate {
   /** Stable ref usable across CLI calls, e.g. "storyset:29846597". */
