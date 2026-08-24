@@ -70,7 +70,7 @@ Inheritance is **enforced by shape**: a downstream artifact is an overlay keyed 
 
 ### Panes — a fixed review vocabulary
 
-The app renders a fixed vocabulary of pane types: `narration`, `timeline`, `tokens`, `candidates`, `shotlist`, `composition`, `raw`. A workflow may reorder, add, or drop stages freely, and each stage names the pane that fits it. A genuinely new *kind* of view is the only thing that needs new code — that is the boundary between data-driven and code.
+The app renders a fixed vocabulary of pane types: `narration`, `timeline`, `tokens`, `candidates`, `assets`, `shotlist`, `composition`, `raw`. A workflow may reorder, add, or drop stages freely, and each stage names the pane that fits it. A genuinely new *kind* of view is the only thing that needs new code — that is the boundary between data-driven and code.
 
 ## 5. Review happens in the app
 
@@ -199,6 +199,8 @@ The §8d rule — never generate SVG on the spot — is implemented as **asset-s
 
 **Selection stays human.** `hyperframes-assets search` returns candidates for review; `fetch` vendors the one the reviewer (or the skill, within declared constraints) picked, and records provenance — source, id, author, query, license page, date — in `design/asset-manifest.json`. No bulk vendoring, no scraping.
 
+**A cross-project library caches every download.** Each fetch deposits the original, pre-recolor SVG into `~/.hyperframes/asset-library/`, indexed by title plus every query that ever found it; every search consults the library before any network source, so a hit costs no credits and no round-trip. Originals are stored un-recolored deliberately — recolor maps are per-project and applied at ingest, so one cached asset serves any palette.
+
 **Consistency is achieved by adaptation, never by rejection.** Availability is the priority — the sources are finite, and a collection stage that filters on style reproduces the sparse look this app exists to eliminate. The levers make what was *found* cohere, in descending order of leverage:
 
 1. **Recolor at ingest.** Art direction may declare a hex→hex map; every fetched SVG is remapped onto the project tokens before it touches disk. Flat illustration styles encode color as literal hex fills, so this is a string remap — shared ink is what makes assets from different sources read as one system.
@@ -215,7 +217,7 @@ Ordered by priority, not by date. One thing is urgent; everything else is a futu
 
 The single current priority is output quality: run the built-in workflow (§8) end to end, repeatedly, until it reliably produces satisfying video. Every mechanism in this document exists to serve that, and nothing further down this list matters until it holds.
 
-Part of this priority is **visuals beyond typography**, and its mechanism is deliberate: **never generate SVG on the spot** — generated-on-demand graphics are inconsistent and low-quality. Icons come from the vendored open sets (Lucide, Tabler, Phosphor, Iconoir, Simple Icons — §8d); illustrations now come through the asset-source adapters (§8f), tested against the reference project's real needs: Storyset matched 13 of 14, Freepik 14 of 14, unDraw 12 of 14. What remains here is exercising the adapters inside a full workflow run and tuning the consistency levers against real output.
+Part of this priority is **visuals beyond typography**, and its mechanism is deliberate: **never generate SVG on the spot** — generated-on-demand graphics are inconsistent and low-quality. Icons come from the vendored open sets (Lucide, Tabler, Phosphor, Iconoir, Simple Icons — §8d); illustrations come through the asset-source adapters (§8f), tested against the reference project's real needs: Storyset matched 13 of 14, Freepik 14 of 14, unDraw 12 of 14. The chain has since been proven end to end on one scene — metaphor → asset collection (3 vendored illustrations) → shooting script → composition → clean lint → render. What remains: run the remaining scenes and a full render with narration; exercise the feedback loop on a real revision (widen the recolor map, extra `dropLayers`); wire the assets-stage approval action; and have the stage propose per-asset recolor maps from `extractPalette` instead of hand-written hex pairs.
 
 ### Future versions, roughly in priority order
 
