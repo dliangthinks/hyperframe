@@ -63,6 +63,9 @@
       "high"
      ]
     }
+   ],
+   "reviewChecklist": [
+    "Judge against the argument, not the aesthetics: does the visual make the reasoning legible?"
    ]
   },
   {
@@ -73,6 +76,10 @@
    "dependsOn": [
     "metaphor",
     "artDirection"
+   ],
+   "reviewChecklist": [
+    "Does each secured asset actually depict its need (judge the image, not the title)?",
+    "Style coherence across the set \u2014 one video, one family."
    ]
   },
   {
@@ -107,6 +114,10 @@
      "scope": "shot",
      "kind": "list"
     }
+   ],
+   "reviewChecklist": [
+    "Relevance: does each shot's visual serve the sentence it plays under \u2014 or merely decorate the topic?",
+    "Does every illustration earn its place in the argument, not just fill the frame?"
    ]
   },
   {

@@ -49,6 +49,7 @@ stage := { id, label, skill, doc?, pane, dependsOn[], input?, fields[] }
 - **`dependsOn`** is the dependency graph. Context assembly for a re-run reads upstream from it; staleness propagates downstream from it. Neither is hardcoded to any stage count.
 - **`input: true`** marks authored input (e.g. a narration script) — locked, never generated.
 - **`fields`** declares the structured fields this stage's items must carry (e.g. a candidate's `status`, a shot's `text objects` count), so the app can act on them without parsing prose.
+- **`reviewChecklist`** names what the human should judge at this stage's gate; the app renders it above the pane, so the review focus is present at the moment of review rather than remembered.
 
 Built-in workflows ship with the engine ([workflows/](packages/pipeline/src/design/workflows/)); a project overrides or forks by dropping its own `<id>.workflow.json` in `design/workflows/`. Adding a "sound design" stage or dropping "art direction" is an edit to a workflow file, not to code. The app validates a workflow before running it — unknown panes, forward or missing dependencies, duplicate ids are refused ([workflow.ts](packages/pipeline/src/design/workflow.ts)).
 

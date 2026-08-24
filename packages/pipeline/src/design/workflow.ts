@@ -41,6 +41,10 @@ export interface StageDef {
   input?: boolean;
   /** Declared-field contract this stage's headings must satisfy (README §4). */
   fields?: DeclaredField[];
+  /** What the human should judge at this stage's gate — rendered above the
+   * pane so the review focus is present at the moment of review, not
+   * remembered. Workflow data, so each workflow carries its own. */
+  reviewChecklist?: string[];
 }
 
 export interface Workflow {

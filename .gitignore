@@ -4,6 +4,6 @@ out
 .DS_Store
 *.log
 .env
-output/
+projects/
 .claude/
 *.tsbuildinfo

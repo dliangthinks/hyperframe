@@ -20,7 +20,7 @@ const SKILL_PATH = join(
   "src",
   "skill.md",
 );
-const OUTPUT_DIR = join(REPO_ROOT, "output");
+const OUTPUT_DIR = join(REPO_ROOT, "projects");
 
 // ── Pipeline ────────────────────────────────────────────────────────────────
 const pipeline = new Pipeline({

@@ -141,6 +141,7 @@ export interface StageDef {
   pane: PaneType;
   dependsOn: string[];
   input?: boolean;
+  reviewChecklist?: string[];
 }
 
 export interface Workflow {
